@@ -1,0 +1,28 @@
+Downloading https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt to 'yolo11n.pt'...
+100%|██████████| 5.35M/5.35M [00:00<00:00, 341MB/s]Ultralytics 8.3.168 🚀 Python-3.11.13 torch-2.6.0+cu124 CUDA:0 (Tesla T4, 15095MiB)
+
+engine/trainer: agnostic_nms=False, amp=True, augment=False, auto_augment=randaugment, batch=8, bgr=0.0, box=7.5, cache=False, cfg=None, classes=None, close_mosaic=10, cls=0.5, conf=None, copy_paste=0.0, copy_paste_mode=flip, cos_lr=False, cutmix=0.0, data=./combined_real_dataset/data.yaml, degrees=0.0, deterministic=True, device=0, dfl=1.5, dnn=False, dropout=0.0, dynamic=False, embed=None, epochs=50, erasing=0.4, exist_ok=False, fliplr=0.5, flipud=0.0, format=torchscript, fraction=1.0, freeze=None, half=False, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, imgsz=640, int8=False, iou=0.7, keras=False, kobj=1.0, line_width=None, lr0=0.01, lrf=0.01, mask_ratio=4, max_det=300, mixup=0.0, mode=train, model=yolo11n.pt, momentum=0.937, mosaic=1.0, multi_scale=False, name=real_interior_training, nbs=64, nms=False, opset=None, optimize=False, optimizer=auto, overlap_mask=True, patience=15, perspective=0.0, plots=True, pose=12.0, pretrained=True, profile=False, project=None, rect=False, resume=False, retina_masks=False, save=True, save_conf=False, save_crop=False, save_dir=runs/detect/real_interior_training, save_frames=False, save_json=False, save_period=-1, save_txt=False, scale=0.5, seed=0, shear=0.0, show=False, show_boxes=True, show_conf=True, show_labels=True, simplify=True, single_cls=False, source=None, split=val, stream_buffer=False, task=detect, time=None, tracker=botsort.yaml, translate=0.1, val=True, verbose=True, vid_stride=1, visualize=False, warmup_bias_lr=0.1, warmup_epochs=3.0, warmup_momentum=0.8, weight_decay=0.0005, workers=8, workspace=None
+
+---------------------------------------------------------------------------
+FileNotFoundError                         Traceback (most recent call last)
+/usr/local/lib/python3.11/dist-packages/ultralytics/engine/trainer.py in get_dataset(self)
+    606             }:
+--> 607                 data = check_det_dataset(self.args.data)
+    608                 if "yaml_file" in data:
+
+4 frames
+FileNotFoundError: Dataset 'combined_real_dataset/data.yaml' images not found, missing path '/content/combined_real_dataset/combined_real_dataset/val'
+Note dataset download directory is '/content/datasets'. You can update this in '/root/.config/Ultralytics/settings.json'
+
+The above exception was the direct cause of the following exception:
+
+RuntimeError                              Traceback (most recent call last)
+/usr/local/lib/python3.11/dist-packages/ultralytics/engine/trainer.py in get_dataset(self)
+    609                     self.args.data = data["yaml_file"]  # for validating 'yolo train data=url.zip' usage
+    610         except Exception as e:
+--> 611             raise RuntimeError(emojis(f"Dataset '{clean_url(self.args.data)}' error ❌ {e}")) from e
+    612         if self.args.single_cls:
+    613             LOGGER.info("Overriding class names with single class.")
+
+RuntimeError: Dataset 'combined_real_dataset/data.yaml' error ❌ Dataset 'combined_real_dataset/data.yaml' images not found, missing path '/content/combined_real_dataset/combined_real_dataset/val'
+Note dataset download directory is '/content/datasets'. You can update this in '/root/.config/Ultralytics/settings.json'

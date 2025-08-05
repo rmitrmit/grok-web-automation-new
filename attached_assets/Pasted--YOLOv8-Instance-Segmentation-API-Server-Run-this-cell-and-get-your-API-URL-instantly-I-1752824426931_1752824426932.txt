@@ -1,0 +1,221 @@
+# 🚀 YOLOv8 Instance Segmentation API Server
+# Run this cell and get your API URL instantly!
+
+# Install required packages
+# Ensure you have a GPU runtime enabled in Colab for best performance
+!pip install fastapi uvicorn ultralytics pillow numpy opencv-python python-multipart nest-asyncio pyngrok
+
+# Import libraries
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+import cv2
+import numpy as np
+from ultralytics import YOLO
+import json
+import nest_asyncio
+from pyngrok import ngrok
+import uvicorn
+from typing import Optional
+import threading
+import time
+
+# Allow nested event loops (required for Colab)
+nest_asyncio.apply()
+
+# Create FastAPI app
+app = FastAPI(title="YOLOv8 Instance Segmentation API", version="1.0.0")
+
+# Enable CORS (Cross-Origin Resource Sharing)
+# This allows your frontend application (e.g., on Replit) to make requests to this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins. For production, specify your Replit URL.
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Global model variable to store the loaded YOLO model
+model = None
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Event handler that runs when the FastAPI application starts up.
+    Loads the YOLOv8 segmentation model.
+    """
+    global model
+    print("🔄 Loading YOLOv8 instance segmentation model...")
+    # --- IMPORTANT FIX: Changed 'yolo11n-seg.pt' to 'yolov8n-seg.pt' ---
+    # YOLOv11 is not a publicly released model by Ultralytics.
+    # 'yolov8n-seg.pt' is a valid, small, pre-trained YOLOv8 segmentation model.
+    # It will be auto-downloaded if not present.
+    model = YOLO('yolov8n-seg.pt')
+    print("✅ YOLOv8 model loaded successfully!")
+
+@app.get("/")
+async def root():
+    """
+    Root endpoint for the API. Provides basic information about the server status.
+    """
+    return {
+        "message": "🤖 YOLOv8 Instance Segmentation API",
+        "status": "running",
+        "model_loaded": model is not None,
+        "endpoints": ["/health", "/detect"]
+    }
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint to verify if the API is running and the model is loaded.
+    """
+    return {
+        "status": "healthy",
+        "model": "yolov8n-seg", # Updated model name in health check
+        "model_loaded": model is not None
+    }
+
+@app.post("/detect")
+async def detect_objects(
+    file: UploadFile = File(...), # Expects an image file upload
+    drawing_path: Optional[str] = Form(None) # Optional form field (currently unused in logic)
+):
+    """
+    Endpoint for performing instance segmentation on an uploaded image.
+    Returns detected objects with their class, confidence, bounding box, and SVG path for masks.
+    """
+    if model is None:
+        # If the model failed to load at startup, return a 503 Service Unavailable error
+        raise HTTPException(status_code=503, detail="Model not loaded. Please check Colab logs for errors.")
+
+    try:
+        # Read image contents from the uploaded file
+        contents = await file.read()
+        # Convert bytes to a NumPy array
+        nparr = np.frombuffer(contents, np.uint8)
+        # Decode the NumPy array into an OpenCV image (BGR format)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if img is None:
+            # If image decoding fails, return a 400 Bad Request error
+            raise HTTPException(status_code=400, detail="Invalid image file provided. Could not decode.")
+
+        # Run YOLOv8 detection and segmentation
+        # conf: confidence threshold, iou: Intersection Over Union threshold for NMS
+        # verbose=False: suppresses detailed output from Ultralytics
+        results = model(img, conf=0.25, iou=0.45, verbose=False)
+
+        detections = []
+        for r in results: # Iterate through detection results (one per image in batch)
+            # Check if masks and bounding boxes are present in the result
+            if r.masks is not None and r.boxes is not None:
+                boxes = r.boxes.cpu().numpy() # Get bounding box data (move to CPU)
+                masks = r.masks.cpu().numpy() # Get mask data (move to CPU)
+
+                # Iterate through each detected object
+                for box, mask in zip(boxes, masks):
+                    x1, y1, x2, y2 = box.xyxy[0] # Bounding box coordinates (top-left, bottom-right)
+                    conf = float(box.conf[0])   # Confidence score
+                    cls_id = int(box.cls[0])    # Class ID
+                    class_name = model.names[cls_id] # Class name from model's names mapping
+
+                    # Generate SVG path from the segmentation mask
+                    mask_data = mask.data[0] # Get the raw mask data (usually a 2D array)
+                    h, w = img.shape[:2]     # Get original image dimensions
+                    # Resize mask to original image dimensions
+                    mask_resized = cv2.resize(mask_data, (w, h), interpolation=cv2.INTER_LINEAR)
+                    # Convert mask to 8-bit unsigned integer (0-255) for contour finding
+                    mask_uint8 = (mask_resized * 255).astype(np.uint8)
+
+                    # Find contours in the binary mask
+                    contours, _ = cv2.findContours(
+                        mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+                    )
+
+                    # Initialize a basic bounding box SVG path as a fallback
+                    refined_path = f"M{x1},{y1} L{x2},{y1} L{x2},{y2} L{x1},{y2} Z"
+                    if contours:
+                        # Find the largest contour (most likely the main object)
+                        largest = max(contours, key=cv2.contourArea)
+                        if len(largest) > 2: # Ensure it's a valid contour (at least 3 points)
+                            # Convert the largest contour to an SVG path string
+                            refined_path = contour_to_svg_path(largest)
+
+                    # Add detection details to the list
+                    detections.append({
+                        "name": class_name,
+                        "confidence": conf,
+                        "x": float(x1),
+                        "y": float(y1),
+                        "width": float(x2 - x1),
+                        "height": float(y2 - y1),
+                        "refinedPath": refined_path # SVG path representing the mask
+                    })
+
+        return {
+            "success": True,
+            "objects": detections,
+            "total_detected": len(detections)
+        }
+
+    except Exception as e:
+        # Catch any unexpected errors and return a 500 Internal Server Error
+        print(f"Error during detection: {e}") # Log the error for debugging in Colab
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+def contour_to_svg_path(contour):
+    """
+    Converts an OpenCV contour (numpy array of points) into an SVG path string.
+    Simplifies the contour using `approxPolyDP` for smoother paths.
+    """
+    if len(contour) < 3:
+        return "" # An SVG path needs at least 3 points
+
+    # Approximate the contour with a polygonal curve
+    # epsilon: maximum distance from contour to approximated contour
+    epsilon = 0.005 * cv2.arcLength(contour, True)
+    simplified = cv2.approxPolyDP(contour, epsilon, True)
+    # Reshape points for easier iteration (N, 2)
+    points = simplified.reshape(-1, 2)
+
+    # Construct the SVG path string
+    path = f"M{points[0][0]},{points[0][1]}" # Move to the first point
+    for point in points[1:]:
+        path += f" L{point[0]},{point[1]}" # Line to subsequent points
+    path += " Z" # Close the path
+    return path
+
+# 🌐 START THE SERVER
+print("🚀 Starting YOLOv8 API Server...")
+
+# Load model first (this is a redundant load if @app.on_event("startup") works,
+# but can act as a fallback or for immediate testing outside FastAPI context)
+print("📥 Loading YOLOv8 model for initial check...")
+# --- IMPORTANT FIX: Changed 'yolo11n-seg.pt' to 'yolov8n-seg.pt' ---
+model = YOLO('yolov8n-seg.pt')
+print("✅ Model loaded!")
+
+# Setup ngrok tunnel for public access
+# --- IMPORTANT: Replace with YOUR OWN ngrok authentication token ---
+# Get your token from https://ngrok.com/dashboard/authtokens
+ngrok.set_auth_token("2yOP6xPW0ZWo13nciXmZehW69d9_3Aw2eGCbyzro1LdpkPSc8") # This token is for demonstration; get your own!
+public_tunnel = ngrok.connect(8000)
+print(f"🌍 Your API is now public at: {public_tunnel.public_url}")
+print(f"🔗 API URL: {public_tunnel.public_url}")
+print("📋 Copy this URL to your Replit secrets!")
+
+# Start server in background thread
+def run_server():
+    """Function to run the Uvicorn server."""
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+
+server_thread = threading.Thread(target=run_server, daemon=True)
+server_thread.start()
+
+# Keep the Colab cell running for a short period to allow server to initialize
+print("⏳ Server starting... (wait 10 seconds)")
+time.sleep(10)
+print("🎉 API is ready! Test it:")
+print(f"   Visit: {public_tunnel.public_url}")
+print(f"   Health check: {public_tunnel.public_url}/health")

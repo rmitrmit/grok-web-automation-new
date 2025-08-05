@@ -1,0 +1,71 @@
+Downloading ultralytics_thop-2.0.14-py3-none-any.whl (26 kB)
+Downloading filetype-1.2.0-py2.py3-none-any.whl (19 kB)
+Downloading python_dotenv-1.1.1-py3-none-any.whl (20 kB)
+Installing collected packages: pillow-avif-plugin, filetype, python-dotenv, pillow-heif, opencv-python-headless, nvidia-nvjitlink-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, idna, nvidia-cusparse-cu12, nvidia-cudnn-cu12, supervision, nvidia-cusolver-cu12, roboflow, ultralytics-thop, ultralytics
+  Attempting uninstall: opencv-python-headless
+    Found existing installation: opencv-python-headless 4.12.0.88
+    Uninstalling opencv-python-headless-4.12.0.88:
+      Successfully uninstalled opencv-python-headless-4.12.0.88
+  Attempting uninstall: nvidia-nvjitlink-cu12
+    Found existing installation: nvidia-nvjitlink-cu12 12.5.82
+    Uninstalling nvidia-nvjitlink-cu12-12.5.82:
+      Successfully uninstalled nvidia-nvjitlink-cu12-12.5.82
+  Attempting uninstall: nvidia-curand-cu12
+    Found existing installation: nvidia-curand-cu12 10.3.6.82
+    Uninstalling nvidia-curand-cu12-10.3.6.82:
+      Successfully uninstalled nvidia-curand-cu12-10.3.6.82
+  Attempting uninstall: nvidia-cufft-cu12
+    Found existing installation: nvidia-cufft-cu12 11.2.3.61
+    Uninstalling nvidia-cufft-cu12-11.2.3.61:
+      Successfully uninstalled nvidia-cufft-cu12-11.2.3.61
+  Attempting uninstall: nvidia-cuda-runtime-cu12
+    Found existing installation: nvidia-cuda-runtime-cu12 12.5.82
+    Uninstalling nvidia-cuda-runtime-cu12-12.5.82:
+      Successfully uninstalled nvidia-cuda-runtime-cu12-12.5.82
+  Attempting uninstall: nvidia-cuda-nvrtc-cu12
+    Found existing installation: nvidia-cuda-nvrtc-cu12 12.5.82
+    Uninstalling nvidia-cuda-nvrtc-cu12-12.5.82:
+      Successfully uninstalled nvidia-cuda-nvrtc-cu12-12.5.82
+  Attempting uninstall: nvidia-cuda-cupti-cu12
+    Found existing installation: nvidia-cuda-cupti-cu12 12.5.82
+    Uninstalling nvidia-cuda-cupti-cu12-12.5.82:
+      Successfully uninstalled nvidia-cuda-cupti-cu12-12.5.82
+  Attempting uninstall: nvidia-cublas-cu12
+    Found existing installation: nvidia-cublas-cu12 12.5.3.2
+    Uninstalling nvidia-cublas-cu12-12.5.3.2:
+      Successfully uninstalled nvidia-cublas-cu12-12.5.3.2
+  Attempting uninstall: idna
+    Found existing installation: idna 3.10
+    Uninstalling idna-3.10:
+      Successfully uninstalled idna-3.10
+  Attempting uninstall: nvidia-cusparse-cu12
+    Found existing installation: nvidia-cusparse-cu12 12.5.1.3
+    Uninstalling nvidia-cusparse-cu12-12.5.1.3:
+      Successfully uninstalled nvidia-cusparse-cu12-12.5.1.3
+  Attempting uninstall: nvidia-cudnn-cu12
+    Found existing installation: nvidia-cudnn-cu12 9.3.0.75
+    Uninstalling nvidia-cudnn-cu12-9.3.0.75:
+      Successfully uninstalled nvidia-cudnn-cu12-9.3.0.75
+  Attempting uninstall: nvidia-cusolver-cu12
+    Found existing installation: nvidia-cusolver-cu12 11.6.3.83
+    Uninstalling nvidia-cusolver-cu12-11.6.3.83:
+      Successfully uninstalled nvidia-cusolver-cu12-11.6.3.83
+Successfully installed filetype-1.2.0 idna-3.7 nvidia-cublas-cu12-12.4.5.8 nvidia-cuda-cupti-cu12-12.4.127 nvidia-cuda-nvrtc-cu12-12.4.127 nvidia-cuda-runtime-cu12-12.4.127 nvidia-cudnn-cu12-9.1.0.70 nvidia-cufft-cu12-11.2.1.3 nvidia-curand-cu12-10.3.5.147 nvidia-cusolver-cu12-11.6.1.9 nvidia-cusparse-cu12-12.3.1.170 nvidia-nvjitlink-cu12-12.4.127 opencv-python-headless-4.10.0.84 pillow-avif-plugin-1.5.2 pillow-heif-1.0.0 python-dotenv-1.1.1 roboflow-1.2.1 supervision-0.26.0 ultralytics-8.3.168 ultralytics-thop-2.0.14
+Creating new Ultralytics Settings v0.0.6 file ✅ 
+View Ultralytics Settings with 'yolo settings' or at '/root/.config/Ultralytics/settings.json'
+Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/quickstart/#ultralytics-settings.
+Using device: cpu
+loading Roboflow workspace...
+loading Roboflow project...
+Failed to download walls/floors: {
+    "error": {
+        "message": "Unsupported request. `GET /label-for-yolov8obb/detecting-floor-wall-and-ceiling-with-yolo-obb` does not exist or cannot be loaded due to missing permissions.",
+        "type": "GraphMethodException",
+        "hint": "You can see your active workspace by issuing a GET request to `/` with your `api_key`."
+    }
+}
+Successfully downloaded 0 dataset
+Combined 0 images into training dataset
+Created training configuration
+No dataset ready for training
+Mounted at /content/drive
